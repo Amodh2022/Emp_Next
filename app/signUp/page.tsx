@@ -1,47 +1,59 @@
-"use client";
+"use client"
 
 import Image from "next/image";
-import { toast, Toaster } from "react-hot-toast";
-import { TailSpin } from "react-loader-spinner";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { toast ,Toaster} from 'react-hot-toast';
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
-import { auth } from "./firebase";
+import { auth } from "../firebase";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
-export default function Login() {
-  const router = useRouter();
+export default function SignUp() {
+  let router=useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showSpin, setShowSpin] = useState(false);
-  const onSubmit = async (event: any) => {
-    setShowSpin(true);
-    console.log(email, password);
+
+  const onSubmit =async(event:any)=> {
+    console.log(email,password)
     event.preventDefault();
 
-    await signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential: any) => {
-        const user = userCredential.user.email;
-        console.log(user);
-        if (email === user) {
-          
-          router.push("/home");
-          setShowSpin(false);
-          toast.success("logged in ")
-        }
-
+    await createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        console.log(user)
+        toast.success("Successfully Signed Up")
+        router.push('/login')
         // ...
       })
-      .catch((error: any) => {
-        console.log(error);
+      .catch((error) => {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            toast.error("Email address  already in use")
+            
+            break;
+          case 'auth/invalid-email':
+            toast.error("Email address is Invalid")
+            break;
+          case 'auth/operation-not-allowed':
+            toast.error("Error Sign Up")
+            break;
+          case 'auth/weak-password':
+            console.log('Password is not strong enough. Add additional characters including special characters and numbers.');
+            break;
+          default:
+            console.log(error.message);
+            break;
+        }
         // ..
       });
   };
   return (
+    
     <div className="flex justify-center items-center h-screen">
+       
       <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Login</h2>
-        <form>
+        <h2 className="text-2xl font-semibold mb-4 text-center">Sign Up</h2>
+        <form >
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">
               Email Address
@@ -71,33 +83,16 @@ export default function Login() {
             onClick={onSubmit}
             className="bg-blue-500 text-white py-2 px-4 rounded-md w-full hover:bg-blue-600"
           >
-            {showSpin ? (
-              <div className="flex justify-center">
-              <TailSpin
-                visible={true}
-                height="30"
-                width="30"
-                color="#FFA500"
-                ariaLabel="tail-spin-loading"
-                radius="1"
-                wrapperStyle={{}}
-                wrapperClass=""
-              />
-              </div>
-            ) : (
-              <p>Login</p>
-            )}
+            SignUp
           </button>
         </form>
         <div className="mt-4 text-center">
-          <Link href="/signUp">
-            <p className="text-blue-500 hover:underline ">
-              Dont't have Account Sign Up?
-            </p>
-          </Link>
+          <a href="#" className="text-blue-500 hover:underline">
+        
+          </a>
         </div>
-        <Toaster/>
       </div>
+      <Toaster/>
     </div>
   );
 }
